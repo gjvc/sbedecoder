@@ -3,7 +3,7 @@
 import logging
 import struct
 
-log = logging.getLogger(__name__)
+log = logging.getLogger( __name__ )
 
 
 class SBEMessageFactory:

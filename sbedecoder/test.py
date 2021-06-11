@@ -63,15 +63,15 @@ def process_single_file( factory, output_log_file, input_sbe_file ):
     with open( input_sbe_file, 'rb' ) as stream:
         contents = stream.read()
         m, bytes_decoded = factory.build( contents )
-        # for field in m.children:
-        #     message_name_id = f'{m.name}/{m.message_id}'
-        #     log.info( f'{field.field_offset:03}  {field.field_length:03}  {message_name_id:<32}  {field.schema_name:<32}  {field.value}' )
+        for field in m.children:
+            message_name_id = f'{m.name}/{m.message_id}'
+            log.info( f'{field.field_offset:03}  {field.field_length:03}  {message_name_id:<32}  {field.schema_name:<32}  {field.value}' )
 
 
 def execute( options, args ):
-    xml_filename = mfsbe_schema_xml_filename()
-    schema = sbedecoder.schema.SBESchema( xml_filename )
+    schema = sbedecoder.schema.SBESchema( options.schema_xml_file )
     factory = mf.cpt.fidessa.report.trade.sbe.MFSBEMessageFactory( schema )
+
     if options.directory:
         return process_directory( factory, options.directory )
 
@@ -79,11 +79,16 @@ def execute( options, args ):
         return process_single_file( factory, options.output_log_file, options.input_sbe_file )
 
 
+# -----------------------------------------------------------------------------
+
 def main():
+    xml_filename = mfsbe_schema_xml_filename()
+
     parser = optparse.OptionParser()
-    parser.add_option( '--directory', default=None )
-    parser.add_option( '--input-sbe-file', default=None )
-    parser.add_option( '--output-log-file', default=None )
+    parser.add_option( '--schema-xml-file', default=xml_filename )
+    parser.add_option( '--directory' )
+    parser.add_option( '--input-sbe-file' )
+    parser.add_option( '--output-log-file' )
     options, args = parser.parse_args()
     execute( options, args )
 
