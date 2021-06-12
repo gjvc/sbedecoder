@@ -1,8 +1,22 @@
 #! /usr/bin/env python3
+
 import logging
 import re
 
-log = logging.getLogger( __name__ )
+log = logging.getLogger( 'sbedecoder' )
+
+
+# CamelCase <> snake_case ---------------------------------------------------------------------------
+
+def snake_case_from_CamelCase( CamelCase ):
+    interim = re.sub( r'([a-z])([A-Z]+)', r'\1_\2', CamelCase )
+    interim = re.sub( r'([a-z0-9])([A-Z])', r'\1_\2', interim )
+    return interim.lower()
+
+
+def CamelCase_from_snake_case( snake_case ):
+    return ''.join( word.title() for word in snake_case.split( '_' ) )
+
 
 # ---------------------------------------------------------------------------------------------------
 
@@ -48,6 +62,8 @@ def calculate_field_length( field_type_map, field ):
         type_name = field[ 'dimension_type' ]
     elif 'type' in field:
         type_name = field[ 'type' ]
+    else:
+        assert False
 
     field_type = field.get( 'primitive_type', type_name )
     fmt, size = fmt_and_size_by_type.get( field_type, (None, None) )
@@ -68,25 +84,12 @@ def calculate_block_length( field_type_map, message ):
     if 'block_length' in message:
         return int( message[ 'block_length' ] )
 
-    length = 0
-    for child in message[ 'children' ]:
-        length += child.field_length
-    return length
+    # length = 0
+    # for child in message[ 'children' ]:
+    #     length += child.field_length
+    # return length
 
-
-#    return sum( calculate_field_length( field_type_map, field ) for field in message[ 'children' ] )
-
-
-# CamelCase <> snake_case ---------------------------------------------------------------------------
-
-def snake_case_from_CamelCase( CamelCase ):
-    interim = re.sub( r'([a-z])([A-Z]+)', r'\1_\2', CamelCase )
-    interim = re.sub( r'([a-z0-9])([A-Z])', r'\1_\2', interim )
-    return interim.lower()
-
-
-def CamelCase_from_snake_case( snake_case ):
-    return ''.join( word.title() for word in snake_case.split( '_' ) )
+    return sum( calculate_field_length( field_type_map, field ) for field in message[ 'children' ] )
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -145,15 +148,24 @@ def message_definition_from_element( element, definition=None ):
     return definition
 
 
-# './/ns2:message', { 'ns2': 'http://www.fixprotocol.org/ns/simple/1.0' }
-# './/sbe:message', { 'sbe': 'http://fixprotocol.io/2016/sbe' }
+def parse_message_definitions( root, namespace=None, uri=None ):
+    if namespace and uri:
+        return [ message_definition_from_element( child ) for child in root.findall( f'.//{namespace}:message', { namespace: uri } ) ]
+
+    return [ message_definition_from_element( child ) for child in root.findall( './/sbe:message', { 'sbe': 'http://fixprotocol.io/2016/sbe' } ) ]
 
 
-def parse_message_definitions( root ):
-    message_definitions = [ message_definition_from_element( child ) for child in root.findall( './/sbe:message', { 'sbe': 'http://fixprotocol.io/2016/sbe' } ) ]
-    return message_definitions
+# ---------------------------------------------------------------------------------------------------
 
+def foo( field_type_map, field_definition ):
 
-def parse_message_definitions( root ):
-    message_definitions = [ message_definition_from_element( child ) for child in root.findall( './/ns2:message', { 'ns2': 'http://www.fixprotocol.org/ns/simple/1.0' } ) ]
-    return message_definitions
+    field_schema_name = field_definition[ 'name' ]
+    field_name = snake_case_from_CamelCase( field_schema_name )
+
+    field_semantic_type = field_definition.get( 'semantic_type', None )
+    field_since_version = int( field_definition.get( 'since_version', 0 ) )
+
+    field_definition_type_name = field_definition.get( 'primitive_type', field_definition[ 'type' ] )
+    field_type = field_type_map[ field_definition_type_name ]
+
+    return field_schema_name, field_name, field_semantic_type, field_since_version, field_definition_type_name, field_type

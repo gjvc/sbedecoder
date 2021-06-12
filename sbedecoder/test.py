@@ -7,16 +7,19 @@ import pathlib
 import sys
 import time
 
-import mf.cpt.fidessa.report.trade.sbe
-
 import sbedecoder.schema
+import parse
 
-# initialize logging (once and once only) and set levels
+
+# -----------------------------------------------------------------------------
+
 logging.basicConfig( datefmt='%Y-%m-%dT%H:%M:%S%z', format='{asctime}  {process:<5}  {levelname:<5}  {filename}:{lineno:<3}  {message}', style='{' )
 logging.getLogger().setLevel( logging.INFO )
 logging.getLogger( 'sbedecoder' ).setLevel( logging.INFO )
 logging.getLogger( 'sbedecoder.schema' ).setLevel( logging.DEBUG )
 logging.Formatter.converter = time.gmtime
+
+# -----------------------------------------------------------------------------
 
 log = logging.getLogger()
 
@@ -48,46 +51,47 @@ def mfsbe_schema_xml_filename( mfsbe_schema_version=18654 ):
     return PROJECT_ROOT / f'res/fix/mfsbe4-{mfsbe_schema_version}.xml'
 
 
-def process_directory( factory, source_directory ):
+def process_directory( message_factory, source_directory ):
     failures = 0
     n = 0
     for filename, message in list( sorted_message_source( source_directory ) ):
         n += 1
         try:
-            process_single_file( factory, filename, message )
+            process_single_file( message_factory, filename, message )
         except Exception as e:
             log.error( f'{filename}  {e}' )
             failures += 1
     log.info( f'complete: processed {n} files, {failures} failures' )
 
 
-def process_single_file( factory, output_log_file, input_sbe_file ):
+def process_single_file( message_factory, output_log_file, input_sbe_file ):
     with open( input_sbe_file, 'rb' ) as stream:
         contents = stream.read()
-        m, bytes_decoded = factory.build( contents )
+        m, bytes_decoded = message_factory.build( contents )
         for field in m.children:
             message_name_id = f'{m.name}/{m.message_id}'
             log.info( f'{field.field_offset:03}  {field.field_length:03}  {message_name_id:<32}  {field.schema_name:<32}  {field.value}' )
 
 
 def execute( options ):
-    schema = sbedecoder.schema.SBESchema( options.schema_xml_file )
-    factory = mf.cpt.fidessa.report.trade.sbe.MFSBEMessageFactory( schema )
+    schema = sbedecoder.schema.SBESchema()
+    schema.load( options.schema_xml_filename, namespace='sbe', uri='http://fixprotocol.io/2016/sbe' )
+    message_factory = parse.MFSBEMessageFactory( schema )
 
     if options.directory:
-        return process_directory( factory, options.directory )
+        return process_directory( message_factory, options.directory )
 
     if options.input_sbe_file and options.output_log_file:
-        return process_single_file( factory, options.output_log_file, options.input_sbe_file )
+        return process_single_file( message_factory, options.output_log_file, options.input_sbe_file )
 
 
 # -----------------------------------------------------------------------------
 
 def main():
-    xml_filename = mfsbe_schema_xml_filename()
+    schema_xml_filename = mfsbe_schema_xml_filename()
 
     parser = argparse.ArgumentParser()
-    parser.add_argument( '--schema-xml-file', default=xml_filename )
+    parser.add_argument( '--schema-xml-filename', default=schema_xml_filename )
     parser.add_argument( '--directory' )
     parser.add_argument( '--input-sbe-file' )
     parser.add_argument( '--output-log-file' )

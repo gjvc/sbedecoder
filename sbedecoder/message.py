@@ -3,7 +3,7 @@
 import logging
 import struct
 
-log = logging.getLogger( __name__ )
+log = logging.getLogger( 'sbedecoder' )
 
 
 class SBEMessage:
@@ -23,7 +23,7 @@ class SBEMessage:
         self.offset = offset
 
         for field in self.children:
-            field_name_id = f'{field.schema_name}/{field.id}'
+            # field_name_id = f'{field.schema_name}/{field.id}'
             # log.info( f'{"message-field-wrap":<40}  {offset:03}  {field.field_length:02x}  {field_name_id:<40}  {field.name}' )
             field.wrap( buffer, offset )
             offset += field.field_length

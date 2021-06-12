@@ -8,22 +8,45 @@ from .field.comp import CompositeMessageField
 from .field.enum import EnumMessageField
 from .field.set import SetMessageField
 from .field.type import TypeMessageField
-from .mess import SBEMessage
+from .message import SBEMessage
 
 log = logging.getLogger( 'sbedecoder.schema' )
 
 
 class SBESchema:
 
-    def __init__( self, xml_filename, include_message_size_header=False, use_description_as_message_name=False ):
-        self.message_definitions = [ ]
-        self.include_message_size_header = include_message_size_header
-        self.use_description_as_message_name = use_description_as_message_name
-
+    def __init__( self ):
         self.field_type_map = { }
         self.message_type_map = { }
+        self.message_definitions = [ ]
 
-        self.load( xml_filename )
+
+    def field_type_name_from_field_definition( self, field_definition ):
+        if 'primitive_type' in field_definition:
+            field_definition_type_name = field_definition[ 'primitive_type' ]
+        else:
+            field_definition_type_name = field_definition[ 'type' ]
+
+        field_type = self.field_type_map[ field_definition_type_name ]
+        field_type_name = field_type[ 'type' ]
+        return field_type_name
+
+
+    def create_field( self, field_definition, field_offset ):
+
+        field_type_name = self.field_type_name_from_field_definition( field_definition )
+
+        if field_type_name == 'type':
+            return TypeMessageField.create( self.field_type_map, field_definition, field_offset )
+
+        if field_type_name == 'enum':
+            return EnumMessageField.create( self.field_type_map, field_definition, field_offset )
+
+        if field_type_name == 'set':
+            return SetMessageField.create( self.field_type_map, field_definition, field_offset )
+
+        if field_type_name == 'composite':
+            return CompositeMessageField.create( self.field_type_map, field_definition, field_offset )
 
 
     def create_group( self, log_token, message_type, field_definition, field_offset ):
@@ -40,35 +63,6 @@ class SBESchema:
         return field_offset
 
 
-    def create_field( self, message_type, field_definition, field_offset, add_header_size=True ):
-
-        field_schema_name = field_definition[ 'name' ]
-        field_name = snake_case_from_CamelCase( field_schema_name )
-
-        if 'primitive_type' in field_definition:
-            field_definition_type_ = field_definition[ 'primitive_type' ]
-        else:
-            field_definition_type_ = field_definition[ 'type' ]
-
-        field_type = self.field_type_map[ field_definition_type_ ]
-        field_type_name = field_type[ 'type' ]
-
-        field_semantic_type = field_definition.get( 'semantic_type', None )
-        field_since_version = int( field_definition.get( 'since_version', 0 ) )
-
-        if field_type_name == 'type':
-            return TypeMessageField.create( field_definition, field_name, field_schema_name, field_semantic_type, field_since_version, field_type, field_offset )
-
-        if field_type_name == 'enum':
-            return EnumMessageField.create( self.field_type_map, field_definition, field_name, field_schema_name, field_semantic_type, field_since_version, field_type, field_offset )
-
-        if field_type_name == 'set':
-            return SetMessageField.create( self.field_type_map, field_definition, field_name, field_schema_name, field_semantic_type, field_since_version, field_type, field_offset )
-
-        if field_type_name == 'composite':
-            return CompositeMessageField.create( field_definition, field_name, field_schema_name, field_semantic_type, field_since_version, field_type, field_offset )
-
-
     def create_fields_and_groups( self, log_token, message_type, fields_and_groups_list, field_offset=None ):
 
         if field_offset is None:
@@ -76,18 +70,37 @@ class SBESchema:
 
         for field_definition in fields_and_groups_list:
 
-            if 'dimension_type' in field_definition:
-                field_offset = self.create_group( log_token, message_type, field_definition, field_offset )
-
-            elif 'type' in field_definition:
-                field = self.create_field( message_type, field_definition, field_offset )
+            if 'type' in field_definition:
+                field = self.create_field( field_definition, field_offset )
                 message_type.children.append( field )
 
                 field_schema_name_id = f'{field_offset:<3}  {field.field_length:03}  {field.schema_name}/{field.id}'
                 log.info( f'{log_token:<40}  {field_schema_name_id:<40}' )
                 field_offset += field.field_length
 
+            elif 'dimension_type' in field_definition:
+                field_offset = self.create_group( log_token, message_type, field_definition, field_offset )
+
         return field_offset
+
+
+    def create_message_type( self, message_definition ):
+
+        message_name = message_definition[ 'name' ]
+        message_id = int( message_definition[ 'id' ] )
+
+        message_type = type( message_name, (SBEMessage,), { } )
+        setattr( message_type, 'children', [ ] )
+        setattr( message_type, 'message_id', message_id )
+        setattr( message_type, 'schema_name', message_name )
+        setattr( message_type, 'name', snake_case_from_CamelCase( message_name ) )
+
+        self.message_type_map[ message_id ] = message_type
+
+        # log_token = f'create_message_type'
+        # log.info( f'{log_token:<40}  {message_name}/{message_id}' )
+
+        return message_type
 
 
     def create_header( self, message_type ):
@@ -105,29 +118,11 @@ class SBESchema:
             setattr( message_type, message_header_field.name, message_header_field )
 
             message_name_id = f'{header_size:<3}  {message_header_field.field_length:03}  {message_header_field.name}/{message_header_field.id}'
-            log.info( f'{"header-field":<40}  {message_name_id:<40}' )
+            log.info( f'{"create_header_field":<40}  {message_name_id:<40}' )
 
             header_size += primitive_type_size
 
         setattr( message_type, 'header_size', header_size )
-
-
-    def create_message_type( self, message_definition ):
-
-        message_name = message_definition[ 'name' ]
-        message_id = int( message_definition[ 'id' ] )
-
-        message_type = type( message_name, (SBEMessage,), { } )
-        setattr( message_type, 'children', [ ] )
-        setattr( message_type, 'message_id', message_id )
-        setattr( message_type, 'name', message_name )
-        setattr( message_type, 'schema_name', message_name )
-
-        self.message_type_map[ message_id ] = message_type
-        log_token = f'create-message-type'
-        log.info( f'{log_token:<40}  {message_name}/{message_id}' )
-
-        return message_type
 
 
     def create_message( self, message_definition ):
@@ -136,16 +131,16 @@ class SBESchema:
         self.create_header( message_type )
 
         fields_and_groups_list = message_definition.get( 'children', [ ] )
-        self.create_fields_and_groups( 'create-fields-and-groups', message_type, fields_and_groups_list )
+        self.create_fields_and_groups( 'create_fields_and_groups', message_type, fields_and_groups_list )
 
 
-    def load( self, xml_filename ):
-        log.info( f'load-file {xml_filename}' )
+    def load_schema_xml_file( self, xml_filename, namespace='', uri='' ):
+        log.info( f'load_schema_xml_file  {xml_filename}' )
         tree = xml.etree.ElementTree.parse( xml_filename )
         root = tree.getroot()
 
         self.field_type_map = parse_type_definitions( root )
-        self.message_definitions = parse_message_definitions( root )
+        self.message_definitions = parse_message_definitions( root, namespace=namespace, uri=uri )
 
         for message_definition in self.message_definitions:
             self.create_message( message_definition )

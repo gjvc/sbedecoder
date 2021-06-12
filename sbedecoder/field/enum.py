@@ -4,7 +4,7 @@ import logging
 import struct
 
 from .base import SBEMessageField
-from ..aux import fmt_and_size_by_type
+from ..aux import fmt_and_size_by_type, foo
 
 log = logging.getLogger( __name__ )
 
@@ -55,13 +55,15 @@ class EnumMessageField( SBEMessageField ):
 
 
     @staticmethod
-    def create( field_type_map, field_definition, field_name, field_schema_name, field_semantic_type, field_since_version, field_type, offset, endian='<' ):
+    def create( field_type_map, field_definition, field_offset, endian='<' ):
+
+        field_schema_name, field_name, field_semantic_type, field_since_version, field_definition_type_name, field_type = foo( field_type_map, field_definition )
+
         encoding_type = field_type[ 'encoding_type' ]
         encoding_type_type = field_type_map[ encoding_type ]
 
         primitive_type_ = encoding_type_type[ 'primitive_type' ]
         primitive_type_fmt, primitive_type_size = fmt_and_size_by_type[ primitive_type_ ]
-        field_offset = offset
 
         if field_definition.get( 'offset', None ):
             field_offset = int( field_definition.get( 'offset', None ) )
