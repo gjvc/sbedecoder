@@ -4,8 +4,9 @@ import logging
 import struct
 
 from .base import SBEMessageField
+from ..aux import fmt_and_size_by_type
 
-log = logging.getLogger(__name__)
+log = logging.getLogger( __name__ )
 
 
 class SetMessageField( SBEMessageField ):
@@ -46,3 +47,29 @@ class SetMessageField( SBEMessageField ):
 
         return ', '.join( _a )
 
+
+    @staticmethod
+    def create( field_type_map, field_definition, field_name, field_schema_name, field_semantic_type, field_since_version, field_type, offset, endian='<' ):
+        field_offset = offset
+        if field_definition.get( 'offset', None ):
+            field_offset = int( field_definition.get( 'offset', None ) )
+
+        encoding_type = field_type[ 'encoding_type' ]
+        encoding_type_type = field_type_map[ encoding_type ]
+
+        type_ = encoding_type_type[ 'primitive_type' ]
+        primitive_type_fmt, primitive_type_size = fmt_and_size_by_type[ type_ ]
+
+        field_length = field_type.get( 'length', None )
+        if field_length:
+            field_length = int( field_length )
+            unpack_fmt = f'{endian}{field_length * primitive_type_fmt}'
+        else:
+            field_length = primitive_type_size
+            unpack_fmt = f'{endian}{primitive_type_fmt}'
+
+        choice_values = field_type[ 'children' ]
+        field_id = field_definition[ 'id' ]
+        field_description = field_definition.get( 'description', b'' )
+
+        return SetMessageField( choices=choice_values, description=field_description, field_length=field_length, field_offset=field_offset, id=field_id, name=field_name, schema_name=field_schema_name, semantic_type=field_semantic_type, since_version=field_since_version, unpack_fmt=unpack_fmt, )

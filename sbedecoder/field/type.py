@@ -4,8 +4,9 @@ import logging
 import struct
 
 from .base import SBEMessageField
+from ..aux import fmt_and_size_by_type
 
-log = logging.getLogger(__name__)
+log = logging.getLogger( __name__ )
 
 
 class TypeMessageField( SBEMessageField ):
@@ -52,3 +53,45 @@ class TypeMessageField( SBEMessageField ):
         _raw_value, = struct.unpack_from( self.unpack_fmt, self.buffer, self.field_offset )
 
         return _raw_value
+
+
+    @staticmethod
+    def create( field_definition, field_name, field_schema_name, field_semantic_type, field_since_version, field_type, offset, endian='<' ):
+        primitive_type_ = field_type[ 'primitive_type' ]
+        is_string_type = primitive_type_ == 'char' and 'length' in field_type and int( field_type[ 'length' ] ) > 1
+        field_offset = offset
+        if field_definition.get( 'offset', None ):
+            field_offset = int( field_definition.get( 'offset', None ) )
+
+        primitive_type_fmt, primitive_type_size = fmt_and_size_by_type[ primitive_type_ ]
+        field_length = field_type.get( 'length', None )
+        if field_length:
+            field_length = int( field_length )
+            if is_string_type:
+                unpack_fmt = f'{field_length:d}s'  # unpack as string (which may be null-terminated if shorter)
+            else:
+                unpack_fmt = f'{endian}{field_length}{primitive_type_fmt}'
+        else:
+            field_length = primitive_type_size
+            unpack_fmt = f'{endian}{primitive_type_fmt}'
+
+        constant = None
+        optional = False
+        if 'presence' in field_type:
+            if field_type[ 'presence' ] == 'constant':
+                constant_prim_type = primitive_type_
+                if constant_prim_type == 'char':
+                    constant = str( field_type[ 'text' ] )
+                else:
+                    constant = int( field_type[ 'text' ] )
+            elif field_type[ 'presence' ] == 'optional':
+                optional = True
+
+        null_value = None
+        if 'null_value' in field_type:
+            null_value = int( field_type[ 'null_value' ] )
+
+        field_id = field_definition.get( 'id' )
+        field_description = field_definition.get( 'description', b'' )
+
+        return TypeMessageField( name=field_name, schema_name=field_schema_name, id=field_id, description=field_description, unpack_fmt=unpack_fmt, field_offset=field_offset, field_length=field_length, null_value=null_value, constant=constant, optional=optional, is_string_type=is_string_type, semantic_type=field_semantic_type, since_version=field_since_version )

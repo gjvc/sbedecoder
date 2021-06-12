@@ -74,7 +74,7 @@ def calculate_block_length( field_type_map, message ):
     return length
 
 
- #    return sum( calculate_field_length( field_type_map, field ) for field in message[ 'children' ] )
+#    return sum( calculate_field_length( field_type_map, field ) for field in message[ 'children' ] )
 
 
 # CamelCase <> snake_case ---------------------------------------------------------------------------
@@ -145,6 +145,15 @@ def message_definition_from_element( element, definition=None ):
     return definition
 
 
+# './/ns2:message', { 'ns2': 'http://www.fixprotocol.org/ns/simple/1.0' }
+# './/sbe:message', { 'sbe': 'http://fixprotocol.io/2016/sbe' }
+
+
 def parse_message_definitions( root ):
     message_definitions = [ message_definition_from_element( child ) for child in root.findall( './/sbe:message', { 'sbe': 'http://fixprotocol.io/2016/sbe' } ) ]
+    return message_definitions
+
+
+def parse_message_definitions( root ):
+    message_definitions = [ message_definition_from_element( child ) for child in root.findall( './/ns2:message', { 'ns2': 'http://www.fixprotocol.org/ns/simple/1.0' } ) ]
     return message_definitions

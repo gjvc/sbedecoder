@@ -1,12 +1,14 @@
 #! /usr/bin/env python3
+
+import argparse
 import logging
-import optparse
 import os
 import pathlib
 import sys
 import time
 
 import mf.cpt.fidessa.report.trade.sbe
+
 import sbedecoder.schema
 
 # initialize logging (once and once only) and set levels
@@ -68,7 +70,7 @@ def process_single_file( factory, output_log_file, input_sbe_file ):
             log.info( f'{field.field_offset:03}  {field.field_length:03}  {message_name_id:<32}  {field.schema_name:<32}  {field.value}' )
 
 
-def execute( options, args ):
+def execute( options ):
     schema = sbedecoder.schema.SBESchema( options.schema_xml_file )
     factory = mf.cpt.fidessa.report.trade.sbe.MFSBEMessageFactory( schema )
 
@@ -84,13 +86,13 @@ def execute( options, args ):
 def main():
     xml_filename = mfsbe_schema_xml_filename()
 
-    parser = optparse.OptionParser()
-    parser.add_option( '--schema-xml-file', default=xml_filename )
-    parser.add_option( '--directory' )
-    parser.add_option( '--input-sbe-file' )
-    parser.add_option( '--output-log-file' )
-    options, args = parser.parse_args()
-    execute( options, args )
+    parser = argparse.ArgumentParser()
+    parser.add_argument( '--schema-xml-file', default=xml_filename )
+    parser.add_argument( '--directory' )
+    parser.add_argument( '--input-sbe-file' )
+    parser.add_argument( '--output-log-file' )
+    args = parser.parse_args()
+    execute( args )
 
 
 # -----------------------------------------------------------------------------
