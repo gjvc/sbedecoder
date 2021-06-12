@@ -4,7 +4,7 @@ import logging
 import struct
 
 from .base import SBEMessageField
-from ..aux import fmt_and_size_by_type, foo
+from ..aux import fmt_and_size_by_type, get_field_type_details
 
 log = logging.getLogger( __name__ )
 
@@ -51,7 +51,7 @@ class SetMessageField( SBEMessageField ):
     @staticmethod
     def create( field_type_map, field_definition, field_offset, endian='<' ):
 
-        field_schema_name, field_name, field_semantic_type, field_since_version, field_definition_type_name, field_type = foo( field_type_map, field_definition )
+        field_schema_name, field_name, field_semantic_type, field_since_version, field_definition_type_name, field_type = get_field_type_details( field_type_map, field_definition )
 
         if field_definition.get( 'offset', None ):
             field_offset = int( field_definition.get( 'offset', None ) )

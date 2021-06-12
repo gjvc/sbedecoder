@@ -157,7 +157,7 @@ def parse_message_definitions( root, namespace=None, uri=None ):
 
 # ---------------------------------------------------------------------------------------------------
 
-def foo( field_type_map, field_definition ):
+def get_field_type_details( field_type_map, field_definition ):
 
     field_schema_name = field_definition[ 'name' ]
     field_name = snake_case_from_CamelCase( field_schema_name )
