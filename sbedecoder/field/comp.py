@@ -29,7 +29,7 @@ class CompositeMessageField( SBEMessageField ):
             setattr( self, part.name, part )
 
 
-    def wrap( self, buffer, offset, relative_offset=0 ):
+    def wrap( self, buffer, offset ):
         # log.info( f'{"wrap":<40} {offset:03}  {self.field_offset:4}   {self.field_length:4}' )
         self.buffer, self.offset = buffer, offset
         relative_offset = 0

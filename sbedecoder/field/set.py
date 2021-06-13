@@ -64,7 +64,6 @@ class SetMessageField( SBEMessageField ):
 
         field_length = field_type.get( 'length', None )
         if field_length:
-            field_length = int( field_length )
             unpack_fmt = f'{endian}{field_length * primitive_type_fmt}'
         else:
             field_length = primitive_type_size

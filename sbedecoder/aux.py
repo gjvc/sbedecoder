@@ -57,43 +57,6 @@ fmt_and_size_by_type = {
 
 # ---------------------------------------------------------------------------------------------------
 
-def calculate_field_length( field_type_map, field ):
-    if 'dimension_type' in field:
-        type_name = field[ 'dimension_type' ]
-    elif 'type' in field:
-        type_name = field[ 'type' ]
-    else:
-        assert False
-
-    field_type = field.get( 'primitive_type', type_name )
-    fmt, size = fmt_and_size_by_type.get( field_type, (None, None) )
-    if fmt and size:
-        return size
-
-    field_definition = field_type_map[ type_name ]
-    encoding_type_name = field_definition.get( 'encoding_type' )
-    if encoding_type_name:
-        fmt, size = fmt_and_size_by_type.get( encoding_type_name, (None, None) )
-        if fmt and size:
-            return size
-
-    return sum( calculate_field_length( field_type_map, child ) for child in field_definition[ 'children' ] )
-
-
-def calculate_block_length( field_type_map, message ):
-    if 'block_length' in message:
-        return int( message[ 'block_length' ] )
-
-    # length = 0
-    # for child in message[ 'children' ]:
-    #     length += child.field_length
-    # return length
-
-    return sum( calculate_field_length( field_type_map, field ) for field in message[ 'children' ] )
-
-
-# ---------------------------------------------------------------------------------------------------
-
 def dict_from_element( element ):
     d = { snake_case_from_CamelCase( name ): value for name, value in element.items() }
     d[ 'type' ] = element.tag
@@ -158,7 +121,6 @@ def parse_message_definitions( root, namespace=None, uri=None ):
 # ---------------------------------------------------------------------------------------------------
 
 def get_field_type_details( field_type_map, field_definition ):
-
     field_schema_name = field_definition[ 'name' ]
     field_name = snake_case_from_CamelCase( field_schema_name )
 
@@ -169,3 +131,14 @@ def get_field_type_details( field_type_map, field_definition ):
     field_type = field_type_map[ field_definition_type_name ]
 
     return field_schema_name, field_name, field_semantic_type, field_since_version, field_definition_type_name, field_type
+
+
+def field_type_name_from_field_definition( field_type_map, field_definition ):
+    if 'primitive_type' in field_definition:
+        field_definition_type_name = field_definition[ 'primitive_type' ]
+    else:
+        field_definition_type_name = field_definition[ 'type' ]
+
+    field_type = field_type_map[ field_definition_type_name ]
+    field_type_name = field_type[ 'type' ]
+    return field_type_name

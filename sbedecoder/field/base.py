@@ -18,7 +18,7 @@ class SBEMessageField:
         self.unpack_fmt = None
 
 
-    def wrap( self, buffer, offset=0 ):
+    def wrap( self, buffer, offset ):
         self.buffer = buffer
         self.offset = offset
 
