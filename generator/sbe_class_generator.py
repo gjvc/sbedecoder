@@ -5,7 +5,7 @@
 Generate a python file containing the message definitions contained in the provided XML schema.
 
 This generated file can then be used to replace the current dynamic file generation that is
-done in the base sbedecoder.
+done in the base tinysbe.
 
 """
 
@@ -14,7 +14,7 @@ import sys
 import subprocess
 from datetime import datetime
 from mako.template import Template
-from sbedecoder import SBESchema
+from tinysbe import SBESchema
 from argparse import ArgumentParser
 
 

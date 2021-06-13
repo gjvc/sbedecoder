@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/tfgm/sbedecoder.svg?branch=master)](https://travis-ci.org/tfgm/sbedecoder)
+[![Build Status](https://travis-ci.org/tfgm/tinysbe.svg?branch=master)](https://travis-ci.org/tfgm/sbedecoder)
 
 Python based Simple Binary Encoding (SBE) decoder
 =================================================
@@ -6,12 +6,12 @@ Python based Simple Binary Encoding (SBE) decoder
 Overview
 --------
 
-sbedecoder is a simple python package for parsing SBE encoded data.  
+tinysbe is a simple python package for parsing SBE encoded data.  
 
-sbedecoder dynamically generates an SBE parser from an xml description of the format. This is accomplished by
+tinysbe dynamically generates an SBE parser from an xml description of the format. This is accomplished by
 creating an instance of `SBESchema()` and calling it's `parse()` method with a file name:
 
-    from sbedecoder import SBESchema
+    from tinysbe import SBESchema
     schema = SBESchema()
     schema.parse('path/to/schema.xml')
 
@@ -30,15 +30,15 @@ Messages are parsed from any structure that looks like a buffer containing the r
 data (buffer, str, bytearay, etc).  To parse SBE encoded data into a message based on a
 schema instance, just call `SBEMessage.parse_message()`:
 
-    from sbedecoder import SBEMessage
+    from tinysbe import SBEMessage
     message = SBEMessage.parse_message(schema, msg_buffer, offset=0)
 
 `offset` is an optional parameter that indicates where within the msg_buffer the message
 starts (including the size header if the schema has `include_message_size_header` set).
 
 A parsed message is represented as an instance of the `SBEMessage()` class.  `SBEMessages()` are
-comprised of zero or more `sbedecoder.message.SBEField()` instances and zero or more
-`sbedecoder.message.SBERepeatingGroup()` instances. An `SBEField()` object can be one of a primitive
+comprised of zero or more `tinysbe.message.SBEField()` instances and zero or more
+`tinysbe.message.SBERepeatingGroup()` instances. An `SBEField()` object can be one of a primitive
 `TypeMessageField()`, a `SetMessageField()` or an `EnumMessageField()`
 
 **Note:** Unless using code generation, you cannot store the messages for later processing.
@@ -53,9 +53,9 @@ To parse these messages, you can create a `MDPSchema()`, use that to create a
 `MDPMessageFactory()` and then create a `SBEParser()` which can then iterate over the messages in
 a packet like this:
 
-    from sbedecoder import MDPSchema
-    from sbedecoder import MDPMessageFactory
-    from sbedecoder import SBEParser
+    from tinysbe import MDPSchema
+    from tinysbe import MDPMessageFactory
+    from tinysbe import SBEParser
 
     schema = SBESchema()
     schema.parse('path/to/schema.xml')
@@ -74,9 +74,9 @@ For more information on SBE, see: http://www.fixtradingcommunity.org/pg/structur
 Install
 -------
 
-The sbedecoder project is available on PyPI:
+The tinysbe project is available on PyPI:
 
-    pip install sbedecoder
+    pip install tinysbe
     
 If you are installing from source:
 
@@ -93,7 +93,7 @@ longer have this dependency.
 mdp_decoder.py
 --------------
 
-mdp_decoder.py serves as an example of using the sbedecoder package.  It is a full decoder for processing CME Group
+mdp_decoder.py serves as an example of using the tinysbe package.  It is a full decoder for processing CME Group
 MDP 3.0 (MDP3) messages from a pcap file.  For help with using mdp_decoder.py:
  
     mdp_decoder.py --help
@@ -149,7 +149,7 @@ packet - timestamp: 2016-03-10 15:33:21.301819 sequence_number: 76643046 sending
 mdp_book_builder.py
 -------------------
 
-mdp_book_builder.py serves as an example of using the sbedecoder package to build limit orderbooks for a given contract.
+mdp_book_builder.py serves as an example of using the tinysbe package to build limit orderbooks for a given contract.
 
 For help with using mdp_book_builder.py:
 
@@ -158,21 +158,21 @@ For help with using mdp_book_builder.py:
 Versioning
 ----------
 
-sbedecoder supports the `sinceVersion` attribute of fields, enumerants, groups, ..., etc, and so it can
+tinysbe supports the `sinceVersion` attribute of fields, enumerants, groups, ..., etc, and so it can
 decode older (e.g. archived) binary data so long as the schema has evolved correctly to maintain support
 for the old format
 
 Performance
 -----------
 
-sbedecoder itself isn't optimized for performance however it can be adequate for simple backtesting scenarios amd 
+tinysbe itself isn't optimized for performance however it can be adequate for simple backtesting scenarios amd 
 post trade analytics.  Due to the amount of printing done by mdp_decoder.py, it can be quite slow to parse large 
 pcap files.
 
 PyPy
 ----
 
-For improved performance (4 to 5x), sbedecoder will run under PyPy.  Assuming your pypy install is in /opt:
+For improved performance (4 to 5x), tinysbe will run under PyPy.  Assuming your pypy install is in /opt:
 
     /opt/pypy/bin/pip install lxml
     /opt/pypy/bin/pip install dpkt
@@ -196,7 +196,7 @@ This command will output a file called generated.py containing the class definit
 while parsing the 'schema.xml' file. The template file used to generated the classes is contained in sbe_message.tmpl.
 
 The generated.py file can simply be used for examining the class construction, or it can replace the contents of the
-generated.py file in the sbedecoder core project. By replacing the generated.py file in the sbedecoder package, a
+generated.py file in the tinysbe core project. By replacing the generated.py file in the sbedecoder package, a
 developer will get access to the class definitions in the IDE.
 
 In order to make use of the standard parser functionality using the generated code one should use the SBESchema.load
@@ -205,7 +205,7 @@ method instead of the parse method.
 An example of how to do this is below and is contained in the mdp_book_builder.py script:
 
     try:
-        from sbedecoder.generated import __messages__ as generated_messages
+        from tinysbe.generated import __messages__ as generated_messages
         mdp_schema.load(generated_messages)
     except:
         mdp_schema.parse(args.schema)

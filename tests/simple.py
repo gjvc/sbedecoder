@@ -7,7 +7,7 @@ import pathlib
 import sys
 import time
 
-import sbedecoder.schema
+import tinysbe.schema
 import parse
 
 
@@ -15,8 +15,8 @@ import parse
 
 logging.basicConfig( datefmt='%Y-%m-%dT%H:%M:%S%z', format='{asctime}  {process:<5}  {levelname:<5}  {filename}:{lineno:<3}  {message}', style='{' )
 logging.getLogger().setLevel( logging.INFO )
-logging.getLogger( 'sbedecoder' ).setLevel( logging.INFO )
-logging.getLogger( 'sbedecoder.schema' ).setLevel( logging.DEBUG )
+logging.getLogger( 'tinysbe' ).setLevel( logging.INFO )
+logging.getLogger( 'tinysbe.schema' ).setLevel( logging.DEBUG )
 logging.Formatter.converter = time.gmtime
 
 # -----------------------------------------------------------------------------
@@ -74,7 +74,7 @@ def process_single_file( message_factory, output_log_file, input_sbe_file ):
 
 
 def execute( options ):
-    schema = sbedecoder.schema.SBESchema()
+    schema = tinysbe.schema.SBESchema()
     schema.load( options.schema_xml_filename, namespace='sbe', uri='http://fixprotocol.io/2016/sbe' )
     message_factory = parse.MFSBEMessageFactory( schema )
 

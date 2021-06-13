@@ -3,7 +3,7 @@
 import logging
 import re
 
-log = logging.getLogger( 'sbedecoder' )
+log = logging.getLogger( 'tinysbe' )
 
 
 # CamelCase <> snake_case ---------------------------------------------------------------------------

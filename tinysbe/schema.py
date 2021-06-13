@@ -10,7 +10,7 @@ from .field.set import SetMessageField
 from .field.type import TypeMessageField
 from .message import SBEMessage
 
-log = logging.getLogger( 'sbedecoder.schema' )
+log = logging.getLogger( 'tinysbe.schema' )
 
 
 class SBESchema:

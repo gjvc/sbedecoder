@@ -7,10 +7,10 @@ import tempfile
 import pytest
 from six.moves import urllib
 
-from sbedecoder import MDPMessageFactory
-from sbedecoder import SBEMessage
-from sbedecoder import SBEParser
-from sbedecoder import SBESchema
+from tinysbe import MDPMessageFactory
+from tinysbe import SBEMessage
+from tinysbe import SBEParser
+from tinysbe import SBESchema
 
 schema_url = 'ftp://ftp.cmegroup.com/SBEFix/Production/Templates/templates_FixBinary.xml'
 
@@ -22,7 +22,7 @@ def mdp_schema():
     urllib.request.urlcleanup()  # work around a bug in urllib under python 2.7 (https://stackoverflow.com/a/44734254)
     schema = SBESchema(include_message_size_header=True, use_description_as_message_name=True)
     try:
-        from sbedecoder.generated import __messages__ as generated_messages
+        from tinysbe.generated import __messages__ as generated_messages
         schema.load(generated_messages)
     except:
         schema.parse(schema_filename)

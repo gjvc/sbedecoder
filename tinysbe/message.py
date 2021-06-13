@@ -3,7 +3,7 @@
 import logging
 import struct
 
-log = logging.getLogger( 'sbedecoder' )
+log = logging.getLogger( 'tinysbe' )
 
 
 class SBEMessage:

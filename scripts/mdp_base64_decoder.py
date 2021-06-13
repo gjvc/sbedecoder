@@ -6,9 +6,9 @@ Parse a base64 replay file containing CME MDP3 market data based on a SBE xml sc
 
 import sys
 import os.path
-from sbedecoder import MDPSchema
-from sbedecoder import MDPMessageFactory
-from sbedecoder import SBEParser
+from tinysbe import MDPSchema
+from tinysbe import MDPMessageFactory
+from tinysbe import SBEParser
 import mdp.prettyprinter
 import mdp.secdef
 import mdp.decode

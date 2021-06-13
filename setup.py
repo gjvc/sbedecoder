@@ -8,7 +8,7 @@ with open(path.join(here, 'README.md')) as f:
     long_description = f.read()
 
 setup(
-    name="sbedecoder",
+    name="tinysbe",
     version="0.1.8",
     author="TradeForecaster Global Markets, LLC",
     author_email="github@tradeforecaster.com",
@@ -17,8 +17,8 @@ setup(
     long_description_content_type="text/markdown",
     license="MIT",
     keywords="sbe mdp3 orderbook message decoder",
-    url="https://github.com/tfgm/sbedecoder",
-    packages=['sbedecoder', 'mdp', 'mdp.orderbook'],
+    url="https://github.com/tfgm/tinysbe",
+    packages=['tinysbe', 'mdp', 'mdp.orderbook'],
     scripts=['scripts/mdp_decoder.py', 'scripts/mdp_base64_decoder.py', 'scripts/mdp_book_builder.py'],
     install_requires=['dpkt', 'lxml', 'six'],
     classifiers=[

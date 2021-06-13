@@ -15,16 +15,16 @@ from mdp.secdef import SecDef
 from mdp.orderbook import PacketProcessor
 from mdp.orderbook import ConsolePrinter
 
-from sbedecoder import MDPSchema
-from sbedecoder import MDPMessageFactory
-from sbedecoder import SBEParser
+from tinysbe import MDPSchema
+from tinysbe import MDPMessageFactory
+from tinysbe import SBEParser
 
 
 def process_file(args, pcap_filename, security_id_filter=None, print_data=False):
     mdp_schema = MDPSchema()
     # Read in the schema xml as a dictionary and construct the various schema objects
     try:
-        from sbedecoder.generated import __messages__ as generated_messages
+        from tinysbe.generated import __messages__ as generated_messages
         mdp_schema.load(generated_messages)
     except:
         mdp_schema.parse(args.schema)
