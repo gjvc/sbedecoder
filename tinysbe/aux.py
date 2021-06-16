@@ -9,9 +9,9 @@ log = logging.getLogger( 'tinysbe' )
 # CamelCase <> snake_case ---------------------------------------------------------------------------
 
 def snake_case_from_CamelCase( CamelCase ):
-    interim = re.sub( r'([a-z])([A-Z]+)', r'\1_\2', CamelCase )
-    interim = re.sub( r'([a-z0-9])([A-Z])', r'\1_\2', interim )
-    return interim.lower()
+    snake_case = re.sub( r'([a-z])([A-Z]+)', r'\1_\2', CamelCase )
+    snake_case = re.sub( r'([a-z0-9])([A-Z])', r'\1_\2', snake_case )
+    return snake_case.lower()
 
 
 def CamelCase_from_snake_case( snake_case ):
@@ -37,7 +37,7 @@ initial_types = {
     "uint64": { "children": [ ], "description": "uint64", "name": "uint64", "primitive_type": "uint64", "type": "type" },
 }
 
-fmt_and_size_by_type = {
+fmt_and_size_by_primitive_type_name = {
     'char': ('c', 1),
     'int': ('i', 4),
     'float': ('f', 4),
@@ -87,6 +87,13 @@ def parse_type_definitions( root ):
     return types
 
 
+def parse_message_definitions( root, namespace=None, uri=None ):
+    path, namespaces = './/message', { }
+    if namespace and uri:
+        path, namespaces = f'.//{namespace}:message', { namespace: uri }
+    return [ message_definition_from_element( child ) for child in root.findall( path, namespaces=namespaces ) ]
+
+
 # ---------------------------------------------------------------------------------------------------
 
 def message_definition_from_element( element, definition=None ):
@@ -98,7 +105,6 @@ def message_definition_from_element( element, definition=None ):
     for child in list( element ):
 
         d = { snake_case_from_CamelCase( name ): value for name, value in child.items() }
-        d[ 'converted_name' ] = snake_case_from_CamelCase( d[ 'name' ] )
 
         if child.tag == 'field':
             children.append( d )
@@ -109,13 +115,6 @@ def message_definition_from_element( element, definition=None ):
     definition[ 'children' ] = children
 
     return definition
-
-
-def parse_message_definitions( root, namespace=None, uri=None ):
-    if namespace and uri:
-        return [ message_definition_from_element( child ) for child in root.findall( f'.//{namespace}:message', { namespace: uri } ) ]
-
-    return [ message_definition_from_element( child ) for child in root.findall( './/sbe:message', { 'sbe': 'http://fixprotocol.io/2016/sbe' } ) ]
 
 
 # ---------------------------------------------------------------------------------------------------
@@ -130,7 +129,7 @@ def get_field_type_details( field_type_map, field_definition ):
     field_definition_type_name = field_definition.get( 'primitive_type', field_definition[ 'type' ] )
     field_type = field_type_map[ field_definition_type_name ]
 
-    return field_schema_name, field_name, field_semantic_type, field_since_version, field_definition_type_name, field_type
+    return field_type, field_schema_name, field_name, field_semantic_type, field_since_version, field_definition_type_name
 
 
 def field_type_name_from_field_definition( field_type_map, field_definition ):

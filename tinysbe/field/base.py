@@ -14,7 +14,7 @@ class SBEMessageField:
         self.id = None
         self.name = None
         self.offset = 0
-        self.schema_name = None
+        self.message_type_name = None
         self.unpack_fmt = None
 
 
